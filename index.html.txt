@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Real-Time Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin-bottom: 5px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+    #message {
+      padding: 6px;
+      margin-right: 5px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    #send {
+      padding: 7px;
+      border: none;
+      background: #4caf50;
+      color: #fff;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    form {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <ul id="messages"></ul>
+  <div>
+    <input id="message" autocomplete="off" /><button id="send">Send</button>
+  </div>
+
+  <!-- Login Form -->
+  <div>
+    <h3>Login</h3>
+    <form id="loginForm">
+      <input type="text" name="username" placeholder="Username">
+      <input type="password" name="password" placeholder="Password">
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <!-- Register Form -->
+  <div>
+    <h3>Register</h3>
+    <form id="registerForm">
+      <input type="text" name="newUsername" placeholder="New Username">
+      <input type="password" name="newPassword" placeholder="New Password">
+      <button type="submit">Register</button>
+    </form>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const messageList = document.getElementById('messages');
+    const messageInput = document.getElementById('message');
+    const sendButton = document.getElementById('send');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    // Sending a chat message
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (message !== '') {
+        socket.emit('chat message', message);
+        appendMessage('You: ' + message);
+        messageInput.value = '';
+      }
+    }
+
+    // Displaying chat messages
+    socket.on('chat message', (msg) => {
+      appendMessage(msg);
+    });
+
+    function appendMessage(msg) {
+      const li = document.createElement('li');
+      li.textContent = msg;
+      messageList.appendChild(li);
+
+      if (messageList.children.length > 50) {
+        messageList.removeChild(messageList.firstChild);
+      }
+    }
+
+    // Login form submission
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(loginForm);
+      fetch('/login', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.text())
+      .then(result => console.log(result))
+      .catch(error => console.error('Error:', error));
+    });
+
+    // Register form submission
+    registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(registerForm);
+      fetch('/register', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.text())
+      .then(result => console.log(result))
+      .catch(error => console.error('Error:', error));
+    });
+  </script>
+</body>
+</html>
+
